@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Enums\ProductStatus;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Product extends BaseModel
 {
-    use SoftDeletes;
+    use SoftDeletes,HasFactory;
     protected $fillable = [
         'name',
         'slug',

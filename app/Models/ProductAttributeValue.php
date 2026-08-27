@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class ProductAttributeValue extends BaseModel
 {
+    use HasFactory;
+
     protected $fillable = [
         'product_attribute_id',
         'value',
@@ -20,6 +23,7 @@ class ProductAttributeValue extends BaseModel
             'product_attribute_id'
         );
     }
+
     public function variants(): BelongsToMany
     {
         return $this->belongsToMany(

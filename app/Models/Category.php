@@ -5,11 +5,11 @@ namespace App\Models;
 use App\Models\BaseModel;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Category extends BaseModel
 {
-    use SoftDeletes;
+    use SoftDeletes,HasFactory;
 
     protected $fillable = [
         'name',
