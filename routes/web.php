@@ -18,4 +18,7 @@ Route::middleware('auth')->group(function () {
 
     Route::put('/account/profile', [ProfileController::class, 'update'])
         ->name('customer.profile.update');
+    
+    Route::put('/account/profile/password', [ProfileController::class, 'updatePassword'])
+        ->name('customer.profile.password.update');
 });

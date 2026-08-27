@@ -26,41 +26,120 @@
             </div>
         @endif
 
-        <form
-            method="POST"
-            action="{{ route('customer.profile.update') }}"
-        >
-            @csrf
-            @method('PUT')
+        {{-- Profile Information --}}
+        <section>
+            <h2>Profile Information</h2>
 
-            <div>
-                <label for="name">Name</label>
+            <form
+                method="POST"
+                action="{{ route('customer.profile.update') }}"
+            >
+                @csrf
+                @method('PUT')
 
-                <input
-                    id="name"
-                    type="text"
-                    name="name"
-                    value="{{ old('name', auth()->user()->name) }}"
-                    required
-                >
-            </div>
+                <div>
+                    <label for="name">Name</label>
 
-            <div>
-                <label for="email">Email</label>
+                    <input
+                        id="name"
+                        type="text"
+                        name="name"
+                        value="{{ old('name', auth()->user()->name) }}"
+                        required
+                    >
 
-                <input
-                    id="email"
-                    type="email"
-                    name="email"
-                    value="{{ old('email', auth()->user()->email) }}"
-                    required
-                >
-            </div>
+                    @error('name')
+                        <div>{{ $message }}</div>
+                    @enderror
+                </div>
 
-            <button type="submit">
-                Save Changes
-            </button>
-        </form>
+                <div>
+                    <label for="email">Email</label>
+
+                    <input
+                        id="email"
+                        type="email"
+                        name="email"
+                        value="{{ old('email', auth()->user()->email) }}"
+                        required
+                    >
+
+                    @error('email')
+                        <div>{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <button type="submit">
+                    Save Changes
+                </button>
+            </form>
+        </section>
+
+        <hr>
+
+        {{-- Change Password --}}
+        <section>
+            <h2>Change Password</h2>
+
+            <form
+                method="POST"
+                action="{{ route('customer.profile.password.update') }}"
+            >
+                @csrf
+                @method('PUT')
+
+                <div>
+                    <label for="current_password">
+                        Current Password
+                    </label>
+
+                    <input
+                        id="current_password"
+                        type="password"
+                        name="current_password"
+                        required
+                    >
+
+                    @error('current_password')
+                        <div>{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div>
+                    <label for="password">
+                        New Password
+                    </label>
+
+                    <input
+                        id="password"
+                        type="password"
+                        name="password"
+                        required
+                    >
+
+                    @error('password')
+                        <div>{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div>
+                    <label for="password_confirmation">
+                        Confirm New Password
+                    </label>
+
+                    <input
+                        id="password_confirmation"
+                        type="password"
+                        name="password_confirmation"
+                        required
+                    >
+                </div>
+
+                <button type="submit">
+                    Change Password
+                </button>
+            </form>
+        </section>
     </main>
 </body>
 </html>

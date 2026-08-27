@@ -5,6 +5,7 @@ namespace Tests\Feature\Customer;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Illuminate\Support\Facades\Hash;
 
 class ProfileTest extends TestCase
 {
@@ -133,4 +134,75 @@ class ProfileTest extends TestCase
             'email' => 'john@example.com',
         ]);
     }
+    public function test_authenticated_customer_can_change_their_password(): void
+    {
+        $user = User::factory()->create([
+            'password' => 'OldPassword123!',
+        ]);
+
+        $response = $this->actingAs($user)
+            ->put('/account/profile/password', [
+                'current_password' => 'OldPassword123!',
+                'password' => 'NewPassword123!',
+                'password_confirmation' => 'NewPassword123!',
+            ]);
+
+        $response->assertRedirect('/account/profile');
+
+        $this->assertTrue(
+            Hash::check('NewPassword123!', $user->fresh()->password)
+        );
+    }
+
+    public function test_customer_cannot_change_password_with_wrong_current_password(): void
+    {
+        $user = User::factory()->create([
+            'password' => 'OldPassword123!',
+        ]);
+
+        $response = $this->actingAs($user)
+            ->from('/account/profile')
+            ->put('/account/profile/password', [
+                'current_password' => 'WrongPassword123!',
+                'password' => 'NewPassword123!',
+                'password_confirmation' => 'NewPassword123!',
+            ]);
+
+        $response->assertRedirect('/account/profile');
+
+        $response->assertSessionHasErrorsIn(
+            'updatePassword',
+            'current_password'
+        );
+
+        $this->assertTrue(
+            Hash::check('OldPassword123!', $user->fresh()->password)
+        );
+    }
+    public function test_customer_cannot_change_password_when_confirmation_does_not_match(): void
+    {
+        $user = User::factory()->create([
+            'password' => 'OldPassword123!',
+        ]);
+
+        $response = $this->actingAs($user)
+            ->from('/account/profile')
+            ->put('/account/profile/password', [
+                'current_password' => 'OldPassword123!',
+                'password' => 'NewPassword123!',
+                'password_confirmation' => 'DifferentPassword123!',
+            ]);
+
+        $response->assertRedirect('/account/profile');
+
+        $response->assertSessionHasErrorsIn(
+            'updatePassword',
+            'password'
+        );
+
+        $this->assertTrue(
+            Hash::check('OldPassword123!', $user->fresh()->password)
+        );
+    }
+
 }
