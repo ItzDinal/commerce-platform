@@ -204,5 +204,86 @@ class ProfileTest extends TestCase
             Hash::check('OldPassword123!', $user->fresh()->password)
         );
     }
+    public function test_customer_cannot_update_profile_without_a_name(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+        ]);
+
+        $response = $this->actingAs($user)
+            ->from('/account/profile')
+            ->put('/account/profile', [
+                'name' => '',
+                'email' => 'john@example.com',
+            ]);
+
+        $response->assertRedirect('/account/profile');
+
+        $response->assertSessionHasErrorsIn(
+            'updateProfileInformation',
+            'name'
+        );
+
+        $this->assertDatabaseHas('users', [
+            'id' => $user->id,
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+        ]);
+    }
+    public function test_customer_cannot_update_profile_with_an_excessively_long_name(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+        ]);
+
+        $response = $this->actingAs($user)
+            ->from('/account/profile')
+            ->put('/account/profile', [
+                'name' => str_repeat('A', 256),
+                'email' => 'john@example.com',
+            ]);
+
+        $response->assertRedirect('/account/profile');
+
+        $response->assertSessionHasErrorsIn(
+            'updateProfileInformation',
+            'name'
+        );
+
+        $this->assertDatabaseHas('users', [
+            'id' => $user->id,
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+        ]);
+    }
+    public function test_customer_cannot_update_profile_without_an_email(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+        ]);
+
+        $response = $this->actingAs($user)
+            ->from('/account/profile')
+            ->put('/account/profile', [
+                'name' => 'John Doe',
+                'email' => '',
+            ]);
+
+        $response->assertRedirect('/account/profile');
+
+        $response->assertSessionHasErrorsIn(
+            'updateProfileInformation',
+            'email'
+        );
+
+        $this->assertDatabaseHas('users', [
+            'id' => $user->id,
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+        ]);
+    }
 
 }
