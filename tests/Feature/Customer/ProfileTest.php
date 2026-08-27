@@ -9,7 +9,12 @@ use Tests\TestCase;
 class ProfileTest extends TestCase
 {
     use RefreshDatabase;
+    public function test_guest_cannot_view_customer_profile(): void
+    {
+        $response = $this->get('/account/profile');
 
+        $response->assertRedirect('/login');
+    }
     public function test_authenticated_customer_can_view_their_profile(): void
     {
         $user = User::factory()->create([
@@ -24,11 +29,25 @@ class ProfileTest extends TestCase
         $response->assertSee('John Doe');
         $response->assertSee('john@example.com');
     }
-
-    public function test_guest_cannot_view_customer_profile(): void
+    public function test_authenticated_customer_can_update_their_name(): void
     {
-        $response = $this->get('/account/profile');
+        $user = User::factory()->create([
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+        ]);
 
-        $response->assertRedirect('/login');
+        $response = $this->actingAs($user)
+            ->put('/account/profile', [
+                'name' => 'Jane Doe',
+                'email' => 'john@example.com',
+            ]);
+
+        $response->assertRedirect('/account/profile');
+
+        $this->assertDatabaseHas('users', [
+            'id' => $user->id,
+            'name' => 'Jane Doe',
+            'email' => 'john@example.com',
+        ]);
     }
 }

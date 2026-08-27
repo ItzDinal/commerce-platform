@@ -15,4 +15,7 @@ Route::get('/auth/google/callback', [GoogleController::class, 'callback'])
 Route::middleware('auth')->group(function () {
     Route::get('/account/profile', [ProfileController::class, 'show'])
         ->name('customer.profile');
+
+    Route::put('/account/profile', [ProfileController::class, 'update'])
+        ->name('customer.profile.update');
 });

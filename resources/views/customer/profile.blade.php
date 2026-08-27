@@ -10,18 +10,57 @@
     <main>
         <h1>My Profile</h1>
 
-        <dl>
-            <dt>Name</dt>
-            <dd>{{ auth()->user()->name }}</dd>
+        @if (session('success'))
+            <div>
+                {{ session('success') }}
+            </div>
+        @endif
 
-            <dt>Email</dt>
-            <dd>{{ auth()->user()->email }}</dd>
+        @if ($errors->any())
+            <div>
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
-            <dt>Email Verified</dt>
-            <dd>
-                {{ auth()->user()->email_verified_at ? 'Yes' : 'No' }}
-            </dd>
-        </dl>
+        <form
+            method="POST"
+            action="{{ route('customer.profile.update') }}"
+        >
+            @csrf
+            @method('PUT')
+
+            <div>
+                <label for="name">Name</label>
+
+                <input
+                    id="name"
+                    type="text"
+                    name="name"
+                    value="{{ old('name', auth()->user()->name) }}"
+                    required
+                >
+            </div>
+
+            <div>
+                <label for="email">Email</label>
+
+                <input
+                    id="email"
+                    type="email"
+                    name="email"
+                    value="{{ old('email', auth()->user()->email) }}"
+                    required
+                >
+            </div>
+
+            <button type="submit">
+                Save Changes
+            </button>
+        </form>
     </main>
 </body>
 </html>
