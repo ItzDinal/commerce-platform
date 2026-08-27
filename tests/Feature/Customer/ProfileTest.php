@@ -285,5 +285,15 @@ class ProfileTest extends TestCase
             'email' => 'john@example.com',
         ]);
     }
+    public function test_guest_cannot_update_customer_profile(): void
+    {
+        $response = $this->from('/login')
+            ->put('/account/profile', [
+                'name' => 'Hacker',
+                'email' => 'hacker@example.com',
+            ]);
+
+        $response->assertRedirect('/login');
+    }
 
 }
