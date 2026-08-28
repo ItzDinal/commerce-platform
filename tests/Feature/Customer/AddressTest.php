@@ -614,4 +614,26 @@ class AddressTest extends TestCase
             'is_default_billing' => true,
         ]);
     }
+    public function test_customer_can_only_see_their_own_addresses(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+
+        Address::factory()->create([
+            'user_id' => $user->id,
+            'label' => 'My Address',
+        ]);
+
+        Address::factory()->create([
+            'user_id' => $otherUser->id,
+            'label' => 'Other Customer Address',
+        ]);
+
+        $response = $this->actingAs($user)
+            ->get('/account/addresses');
+
+        $response->assertSuccessful();
+        $response->assertSee('My Address');
+        $response->assertDontSee('Other Customer Address');
+    }
 }
