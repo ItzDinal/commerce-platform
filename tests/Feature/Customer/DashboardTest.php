@@ -166,4 +166,52 @@ class DashboardTest extends TestCase
         $response->assertSuccessful();
         $response->assertSee('You have no saved addresses.');
     }
+    public function test_dashboard_shows_wishlist_summary(): void
+    {
+        $user = User::factory()->create();
+
+        $wishlistItem = \App\Models\WishlistItem::factory()->create([
+            'user_id' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user)
+            ->get('/account');
+
+        $response->assertSuccessful();
+
+        $response->assertSee('Wishlist');
+        $response->assertSee($wishlistItem->product->name);
+    }
+    public function test_dashboard_only_shows_authenticated_customers_wishlist(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+
+        $userWishlistItem = \App\Models\WishlistItem::factory()->create([
+            'user_id' => $user->id,
+        ]);
+
+        $otherUserWishlistItem = \App\Models\WishlistItem::factory()->create([
+            'user_id' => $otherUser->id,
+        ]);
+
+        $response = $this->actingAs($user)
+            ->get('/account');
+
+        $response->assertSuccessful();
+
+        $response->assertSee($userWishlistItem->product->name);
+        $response->assertDontSee($otherUserWishlistItem->product->name);
+    }
+    public function test_dashboard_shows_message_when_customer_has_no_wishlist_items(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)
+            ->get('/account');
+
+        $response->assertSuccessful();
+
+        $response->assertSee('Your wishlist is empty.');
+    }
 }

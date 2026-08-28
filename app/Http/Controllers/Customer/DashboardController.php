@@ -21,10 +21,17 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
+        $wishlistItems = $user->wishlistItems()
+            ->with('product')
+            ->latest()
+            ->take(5)
+            ->get();
+
         return view('customer.dashboard', [
             'user' => $user,
             'addresses' => $addresses,
             'recentOrders' => $recentOrders,
+            'wishlistItems' => $wishlistItems,
         ]);
     }
 }

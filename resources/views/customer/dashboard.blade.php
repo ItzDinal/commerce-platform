@@ -87,6 +87,23 @@
         @endif
     </section>
 
+    <section>
+        <h2>Wishlist</h2>
+
+        @if ($wishlistItems->isEmpty())
+            <p>Your wishlist is empty.</p>
+        @else
+            <p>You have {{ $wishlistItems->count() }} item(s) in your wishlist.</p>
+
+            <ul>
+                @foreach ($wishlistItems as $wishlistItem)
+                    <li>
+                        {{ $wishlistItem->product->name }}
+                    </li>
+                @endforeach
+            </ul>
+        @endif
+    </section>
 
     <nav>
         <a href="{{ route('customer.profile') }}">Profile</a>
