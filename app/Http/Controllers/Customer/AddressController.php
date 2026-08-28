@@ -120,15 +120,20 @@ class AddressController extends Controller
     {
         return $request->validate([
             'label' => ['nullable', 'string', 'max:100'],
+
             'first_name' => ['required', 'string', 'max:100'],
             'last_name' => ['required', 'string', 'max:100'],
+
             'company' => ['nullable', 'string', 'max:150'],
+
             'address_line_1' => ['required', 'string', 'max:255'],
             'address_line_2' => ['nullable', 'string', 'max:255'],
+
             'city' => ['required', 'string', 'max:100'],
             'state' => ['required', 'string', 'max:100'],
             'postal_code' => ['required', 'string', 'max:20'],
             'country' => ['required', 'string', 'max:100'],
+
             'phone' => ['nullable', 'string', 'max:30'],
         ]);
     }

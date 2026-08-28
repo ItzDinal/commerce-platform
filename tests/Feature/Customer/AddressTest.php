@@ -93,6 +93,42 @@ class AddressTest extends TestCase
             'country',
         ]);
     }
+    public function test_customer_cannot_add_address_with_oversized_fields(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)
+            ->from('/account/addresses/create')
+            ->post('/account/addresses', [
+                'label' => str_repeat('A', 101),
+                'first_name' => str_repeat('A', 101),
+                'last_name' => str_repeat('B', 101),
+                'company' => str_repeat('C', 151),
+                'address_line_1' => str_repeat('D', 256),
+                'address_line_2' => str_repeat('E', 256),
+                'city' => str_repeat('F', 101),
+                'state' => str_repeat('G', 101),
+                'postal_code' => str_repeat('H', 21),
+                'country' => str_repeat('I', 101),
+                'phone' => str_repeat('1', 31),
+            ]);
+
+        $response->assertRedirect('/account/addresses/create');
+
+        $response->assertSessionHasErrors([
+            'label',
+            'first_name',
+            'last_name',
+            'company',
+            'address_line_1',
+            'address_line_2',
+            'city',
+            'state',
+            'postal_code',
+            'country',
+            'phone',
+        ]);
+    }
 
     public function test_guest_cannot_access_edit_address(): void
     {
