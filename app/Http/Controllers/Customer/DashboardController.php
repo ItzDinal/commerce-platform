@@ -12,6 +12,19 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
-        return view('customer.dashboard', compact('user'));
+        $addresses = $user->addresses()
+            ->latest()
+            ->get();
+
+        $recentOrders = $user->orders()
+            ->latest()
+            ->take(5)
+            ->get();
+
+        return view('customer.dashboard', [
+            'user' => $user,
+            'addresses' => $addresses,
+            'recentOrders' => $recentOrders,
+        ]);
     }
 }
