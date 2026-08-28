@@ -4,6 +4,8 @@ use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Customer\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Customer\AddressController;
+use App\Http\Controllers\Customer\DashboardController;
+
 
 Route::view('/', 'welcome')->name('home');
 
@@ -46,4 +48,14 @@ Route::middleware('auth')->prefix('account')->group(function () {
         ->name('customer.addresses.default-shipping');
     Route::put('/addresses/{address}/default-billing', [AddressController::class, 'setDefaultBilling'])
         ->name('customer.addresses.default-billing');
+});
+
+Route::middleware('auth')->group(function () {
+    Route::get('/account', [DashboardController::class, 'index'])
+        ->name('customer.dashboard');
+
+    Route::get('/account/profile', [ProfileController::class, 'show'])
+        ->name('customer.profile');
+
+    // existing routes...
 });
