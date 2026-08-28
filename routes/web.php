@@ -42,4 +42,6 @@ Route::middleware('auth')->prefix('account')->group(function () {
 
     Route::delete('/addresses/{address}', [AddressController::class, 'destroy'])
         ->name('customer.addresses.destroy');
+    Route::put('/addresses/{address}/default-shipping', [AddressController::class, 'setDefaultShipping'])
+        ->name('customer.addresses.default-shipping');
 });

@@ -295,4 +295,131 @@ class AddressTest extends TestCase
             $user->id,
         ], $user->fresh()->addresses()->pluck('user_id')->all());
     }
+    public function test_customer_can_set_default_shipping_address(): void
+    {
+        $user = User::factory()->create();
+
+        $address = Address::factory()->create([
+            'user_id' => $user->id,
+            'is_default_shipping' => false,
+        ]);
+
+        $response = $this->actingAs($user)
+            ->put("/account/addresses/{$address->id}/default-shipping");
+
+        $response->assertRedirect('/account/addresses');
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseHas('addresses', [
+            'id' => $address->id,
+            'user_id' => $user->id,
+            'is_default_shipping' => true,
+        ]);
+    }
+    public function test_setting_new_default_shipping_address_unsets_previous_default(): void
+    {
+        $user = User::factory()->create();
+
+        $oldDefault = Address::factory()->create([
+            'user_id' => $user->id,
+            'is_default_shipping' => true,
+        ]);
+
+        $newDefault = Address::factory()->create([
+            'user_id' => $user->id,
+            'is_default_shipping' => false,
+        ]);
+
+        $response = $this->actingAs($user)
+            ->put("/account/addresses/{$newDefault->id}/default-shipping");
+
+        $response->assertRedirect('/account/addresses');
+
+        $this->assertDatabaseHas('addresses', [
+            'id' => $oldDefault->id,
+            'is_default_shipping' => false,
+        ]);
+
+        $this->assertDatabaseHas('addresses', [
+            'id' => $newDefault->id,
+            'is_default_shipping' => true,
+        ]);
+
+        $this->assertSame(
+            1,
+            Address::where('user_id', $user->id)
+                ->where('is_default_shipping', true)
+                ->count()
+        );
+    }
+    public function test_customer_cannot_set_another_customers_address_as_default_shipping(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+
+        $otherAddress = Address::factory()->create([
+            'user_id' => $otherUser->id,
+            'is_default_shipping' => false,
+        ]);
+
+        $response = $this->actingAs($user)
+            ->put("/account/addresses/{$otherAddress->id}/default-shipping");
+
+        $response->assertForbidden();
+
+        $this->assertDatabaseHas('addresses', [
+            'id' => $otherAddress->id,
+            'user_id' => $otherUser->id,
+            'is_default_shipping' => false,
+        ]);
+    }
+    public function test_guest_cannot_set_default_shipping_address(): void
+    {
+        $user = User::factory()->create();
+
+        $address = Address::factory()->create([
+            'user_id' => $user->id,
+            'is_default_shipping' => false,
+        ]);
+
+        $response = $this->put(
+            "/account/addresses/{$address->id}/default-shipping"
+        );
+
+        $response->assertRedirect('/login');
+
+        $this->assertDatabaseHas('addresses', [
+            'id' => $address->id,
+            'is_default_shipping' => false,
+        ]);
+    }
+    public function test_setting_default_shipping_does_not_affect_another_customer(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+
+        $userAddress = Address::factory()->create([
+            'user_id' => $user->id,
+            'is_default_shipping' => false,
+        ]);
+
+        $otherAddress = Address::factory()->create([
+            'user_id' => $otherUser->id,
+            'is_default_shipping' => true,
+        ]);
+
+        $this->actingAs($user)
+            ->put("/account/addresses/{$userAddress->id}/default-shipping");
+
+        $this->assertDatabaseHas('addresses', [
+            'id' => $userAddress->id,
+            'is_default_shipping' => true,
+        ]);
+
+        $this->assertDatabaseHas('addresses', [
+            'id' => $otherAddress->id,
+            'user_id' => $otherUser->id,
+            'is_default_shipping' => true,
+        ]);
+    }
 }

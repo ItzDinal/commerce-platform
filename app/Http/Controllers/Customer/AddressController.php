@@ -7,7 +7,7 @@ use App\Models\Address;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-
+use Illuminate\Support\Facades\DB;
 class AddressController extends Controller
 {
     public function index(Request $request): View
@@ -65,6 +65,32 @@ class AddressController extends Controller
         return redirect()
             ->route('customer.addresses.index')
             ->with('success', 'Address deleted successfully.');
+    }
+
+    public function setDefaultShipping(
+        Request $request,
+        Address $address
+    ): RedirectResponse {
+        abort_unless(
+            $address->user_id === $request->user()->id,
+            403
+        );
+
+        DB::transaction(function () use ($request, $address): void {
+            $request->user()
+                ->addresses()
+                ->update([
+                    'is_default_shipping' => false,
+                ]);
+
+            $address->update([
+                'is_default_shipping' => true,
+            ]);
+        });
+
+        return redirect()
+            ->route('customer.addresses.index')
+            ->with('success', 'Default shipping address updated successfully.');
     }
 
     protected function validateAddress(Request $request): array
