@@ -422,4 +422,160 @@ class AddressTest extends TestCase
             'is_default_shipping' => true,
         ]);
     }
+    public function test_customer_can_set_default_billing_address(): void
+    {
+        $user = User::factory()->create();
+
+        $address = Address::factory()->create([
+            'user_id' => $user->id,
+            'is_default_billing' => false,
+        ]);
+
+        $response = $this->actingAs($user)
+            ->put("/account/addresses/{$address->id}/default-billing");
+
+        $response->assertRedirect('/account/addresses');
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseHas('addresses', [
+            'id' => $address->id,
+            'user_id' => $user->id,
+            'is_default_billing' => true,
+        ]);
+    }
+
+    public function test_setting_new_default_billing_address_unsets_previous_default(): void
+    {
+        $user = User::factory()->create();
+
+        $oldDefault = Address::factory()->create([
+            'user_id' => $user->id,
+            'is_default_billing' => true,
+        ]);
+
+        $newDefault = Address::factory()->create([
+            'user_id' => $user->id,
+            'is_default_billing' => false,
+        ]);
+
+        $response = $this->actingAs($user)
+            ->put("/account/addresses/{$newDefault->id}/default-billing");
+
+        $response->assertRedirect('/account/addresses');
+
+        $this->assertDatabaseHas('addresses', [
+            'id' => $oldDefault->id,
+            'is_default_billing' => false,
+        ]);
+
+        $this->assertDatabaseHas('addresses', [
+            'id' => $newDefault->id,
+            'is_default_billing' => true,
+        ]);
+    }
+
+    public function test_customer_cannot_set_another_customers_address_as_default_billing(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+
+        $otherAddress = Address::factory()->create([
+            'user_id' => $otherUser->id,
+            'is_default_billing' => false,
+        ]);
+
+        $response = $this->actingAs($user)
+            ->put("/account/addresses/{$otherAddress->id}/default-billing");
+
+        $response->assertForbidden();
+
+        $this->assertDatabaseHas('addresses', [
+            'id' => $otherAddress->id,
+            'user_id' => $otherUser->id,
+            'is_default_billing' => false,
+        ]);
+    }
+
+    public function test_guest_cannot_set_default_billing_address(): void
+    {
+        $user = User::factory()->create();
+
+        $address = Address::factory()->create([
+            'user_id' => $user->id,
+            'is_default_billing' => false,
+        ]);
+
+        $response = $this->put(
+            "/account/addresses/{$address->id}/default-billing"
+        );
+
+        $response->assertRedirect('/login');
+
+        $this->assertDatabaseHas('addresses', [
+            'id' => $address->id,
+            'is_default_billing' => false,
+        ]);
+    }
+
+    public function test_setting_default_billing_does_not_affect_shipping_default(): void
+    {
+        $user = User::factory()->create();
+
+        $shippingAddress = Address::factory()->create([
+            'user_id' => $user->id,
+            'is_default_shipping' => true,
+            'is_default_billing' => false,
+        ]);
+
+        $billingAddress = Address::factory()->create([
+            'user_id' => $user->id,
+            'is_default_shipping' => false,
+            'is_default_billing' => false,
+        ]);
+
+        $this->actingAs($user)
+            ->put("/account/addresses/{$billingAddress->id}/default-billing");
+
+        $this->assertDatabaseHas('addresses', [
+            'id' => $shippingAddress->id,
+            'is_default_shipping' => true,
+            'is_default_billing' => false,
+        ]);
+
+        $this->assertDatabaseHas('addresses', [
+            'id' => $billingAddress->id,
+            'is_default_shipping' => false,
+            'is_default_billing' => true,
+        ]);
+    }
+
+    public function test_setting_default_billing_does_not_affect_another_customer(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+
+        $userAddress = Address::factory()->create([
+            'user_id' => $user->id,
+            'is_default_billing' => false,
+        ]);
+
+        $otherAddress = Address::factory()->create([
+            'user_id' => $otherUser->id,
+            'is_default_billing' => true,
+        ]);
+
+        $this->actingAs($user)
+            ->put("/account/addresses/{$userAddress->id}/default-billing");
+
+        $this->assertDatabaseHas('addresses', [
+            'id' => $userAddress->id,
+            'is_default_billing' => true,
+        ]);
+
+        $this->assertDatabaseHas('addresses', [
+            'id' => $otherAddress->id,
+            'user_id' => $otherUser->id,
+            'is_default_billing' => true,
+        ]);
+    }
 }

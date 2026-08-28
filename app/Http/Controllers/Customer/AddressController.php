@@ -92,6 +92,29 @@ class AddressController extends Controller
             ->route('customer.addresses.index')
             ->with('success', 'Default shipping address updated successfully.');
     }
+    public function setDefaultBilling(
+        Request $request,
+        Address $address
+    ): RedirectResponse {
+        if ($address->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
+        $request->user()
+            ->addresses()
+            ->where('is_default_billing', true)
+            ->update([
+                'is_default_billing' => false,
+            ]);
+
+        $address->update([
+            'is_default_billing' => true,
+        ]);
+
+        return redirect()
+            ->route('customer.addresses.index')
+            ->with('success', 'Default billing address updated successfully.');
+    }
 
     protected function validateAddress(Request $request): array
     {
