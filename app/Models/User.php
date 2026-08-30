@@ -10,9 +10,18 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 
+
 class User extends Authenticatable
 {
     use HasFactory, HasUlids, Notifiable;
+
+    public const ROLE_CUSTOMER = 'customer';
+    public const ROLE_ADMIN = 'admin';
+    public const ROLE_SUPER_ADMIN = 'super_admin';
+
+    public const STATUS_ACTIVE = 'active';
+    public const STATUS_INACTIVE = 'inactive';
+    public const STATUS_SUSPENDED = 'suspended';
 
     protected $fillable = [
         'name',
@@ -48,6 +57,29 @@ class User extends Authenticatable
         return $this->hasOne(Cart::class);
     }
 
+    public function isAdmin(): bool
+    {
+        return in_array($this->role, [
+            self::ROLE_ADMIN,
+            self::ROLE_SUPER_ADMIN,
+        ], true);
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === self::ROLE_SUPER_ADMIN;
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status === self::STATUS_ACTIVE;
+    }
+
+    public function isActiveAdmin(): bool
+    {
+        return $this->isAdmin() && $this->isActive();
+    }
+
     public function sendPasswordResetNotification($token): void
     {
         $this->notify(new ResetPasswordNotification($token));
@@ -65,4 +97,6 @@ class User extends Authenticatable
     {
         return $this->hasMany(WishlistItem::class);
     }
+
+    
 }
