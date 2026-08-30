@@ -7,6 +7,7 @@ use App\Http\Controllers\Customer\DashboardController;
 use App\Http\Controllers\Customer\WishlistController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Customer\CartController;
+use App\Http\Controllers\Admin\AuthController;
 
 Route::view('/', 'welcome')->name('home');
 
@@ -78,4 +79,19 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/account/cart', [CartController::class, 'store'])
         ->name('customer.cart.store');
-});
+
+    
+
+    // Admin Authentication
+    Route::middleware('guest')->group(function () {
+        Route::get('/admin/login', [AuthController::class, 'showLogin'])
+            ->name('admin.login');
+
+        Route::post('/admin/login', [AuthController::class, 'login'])
+            ->name('admin.login.submit');
+    });
+
+    Route::post('/admin/logout', [AuthController::class, 'logout'])
+        ->middleware('auth')
+        ->name('admin.logout');
+    });
