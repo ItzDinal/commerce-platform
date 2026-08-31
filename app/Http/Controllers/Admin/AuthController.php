@@ -20,6 +20,7 @@ class AuthController extends Controller
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
+            'remember' => ['sometimes', 'boolean'],
         ]);
 
         $user = User::where('email', $credentials['email'])->first();
@@ -30,7 +31,13 @@ class AuthController extends Controller
             ]);
         }
 
-        if (! Auth::attempt($credentials)) {
+        if (! Auth::attempt(
+            [
+                'email' => $credentials['email'],
+                'password' => $credentials['password'],
+            ],
+            $credentials['remember'] ?? false
+        )) {
             throw ValidationException::withMessages([
                 'email' => 'The provided credentials are incorrect.',
             ]);
