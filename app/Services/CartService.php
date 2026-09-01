@@ -136,7 +136,7 @@ class CartService
                     variantName: $variantName,
                     sku: $variant->sku,
                     quantity: $item->quantity,
-                    unitPrice: $variant->price,
+                    unitPrice: $variant->priceInLkr(),
                     lineTotal: $item->lineTotal(),
                 );
             }

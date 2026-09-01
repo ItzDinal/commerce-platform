@@ -49,4 +49,18 @@ class ProductVariant extends BaseModel
     {
         return $this->hasMany(CartItem::class);
     }
+
+    public function priceInLkr(): int
+    {
+        $rawPrice = (string) $this->getRawOriginal('price');
+        [$whole, $fraction] = array_pad(explode('.', $rawPrice, 2), 2, '0');
+
+        if (trim($fraction, '0') !== '') {
+            throw new \RuntimeException(
+                'Product prices must be whole LKR amounts.'
+            );
+        }
+
+        return (int) $whole;
+    }
 }

@@ -9,9 +9,6 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use App\Models\ProductVariant;
 use App\Services\CartService;
-use App\Models\Cart;
-
-
 class WishlistController extends Controller
 {
     public function store(Request $request): RedirectResponse
@@ -55,7 +52,6 @@ class WishlistController extends Controller
         ]);
     }
 
-    
     public function moveToCart(
         Request $request,
         WishlistItem $wishlistItem
@@ -88,7 +84,7 @@ class WishlistController extends Controller
             ]);
         }
 
-        $cart = $request->user()->cart()->firstOrCreate([]);
+        $cart = $request->user()->persistentCart();
 
         app(CartService::class)->addToCart(
             $cart,

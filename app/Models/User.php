@@ -6,9 +6,9 @@ use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-
 
 class User extends Authenticatable
 {
@@ -17,6 +17,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'phone',
         'password',
     ];
 
@@ -43,9 +44,14 @@ class User extends Authenticatable
         return 'string';
     }
 
-    public function cart()
+    public function cart(): HasOne
     {
         return $this->hasOne(Cart::class);
+    }
+
+    public function persistentCart(): Cart
+    {
+        return $this->cart()->firstOrCreate([]);
     }
 
     public function sendPasswordResetNotification($token): void
@@ -65,4 +71,6 @@ class User extends Authenticatable
     {
         return $this->hasMany(WishlistItem::class);
     }
+
+
 }

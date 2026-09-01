@@ -9,6 +9,7 @@ use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use App\Models\Inventory;
 
 class CartTest extends TestCase
 {
@@ -146,5 +147,253 @@ class CartTest extends TestCase
         $this->assertSame(26, strlen($cart->id));
         $this->assertFalse($cart->getIncrementing());
         $this->assertSame('string', $cart->getKeyType());
+    }
+    public function test_cart_subtotal_is_calculated_correctly(): void
+    {
+        $user = User::factory()->create();
+
+        $product = Product::factory()->create();
+
+        $variant = ProductVariant::factory()->create([
+            'product_id' => $product->id,
+            'price' => 15000,
+        ]);
+
+        CartItem::create([
+            'cart_id' => $user->cart()->create()->id,
+            'product_variant_id' => $variant->id,
+            'quantity' => 2,
+        ]);
+
+        $cart = $user->cart->load('items.productVariant');
+
+        $service = app(\App\Services\CartService::class);
+
+        $this->assertSame(
+            30000,
+            $service->subtotal($cart)
+        );
+    }
+    public function test_cart_subtotal_includes_multiple_items(): void
+    {
+        $user = User::factory()->create();
+
+        $product = Product::factory()->create();
+
+        $variantOne = ProductVariant::factory()->create([
+            'product_id' => $product->id,
+            'price' => 15000,
+        ]);
+
+        $variantTwo = ProductVariant::factory()->create([
+            'product_id' => $product->id,
+            'price' => 8000,
+        ]);
+
+        $cart = $user->cart()->create();
+
+        CartItem::create([
+            'cart_id' => $cart->id,
+            'product_variant_id' => $variantOne->id,
+            'quantity' => 2,
+        ]);
+
+        CartItem::create([
+            'cart_id' => $cart->id,
+            'product_variant_id' => $variantTwo->id,
+            'quantity' => 1,
+        ]);
+
+        $cart->load('items.productVariant');
+
+        $service = app(\App\Services\CartService::class);
+
+        $this->assertSame(
+            38000,
+            $service->subtotal($cart)
+        );
+    }
+        public function test_cart_item_quantity_can_be_updated(): void
+    {
+        $user = User::factory()->create();
+
+        $product = Product::factory()->create();
+
+        $variant = ProductVariant::factory()->create([
+            'product_id' => $product->id,
+            'price' => 15000,
+        ]);
+
+        Inventory::factory()->create([
+            'product_variant_id' => $variant->id,
+            'quantity' => 10,
+            'reserved' => 0,
+        ]);
+
+        $cart = $user->cart()->create();
+
+        $item = CartItem::create([
+            'cart_id' => $cart->id,
+            'product_variant_id' => $variant->id,
+            'quantity' => 2,
+        ]);
+
+        $service = app(\App\Services\CartService::class);
+
+        $updatedItem = $service->updateQuantity($item, 5);
+
+        $this->assertSame(5, $updatedItem->quantity);
+
+        $this->assertDatabaseHas('cart_items', [
+            'id' => $item->id,
+            'quantity' => 5,
+        ]);
+    }
+
+    public function test_cart_item_quantity_cannot_be_zero(): void
+    {
+        $user = User::factory()->create();
+
+        $product = Product::factory()->create();
+
+        $variant = ProductVariant::factory()->create([
+            'product_id' => $product->id,
+            'price' => 15000,
+        ]);
+
+        Inventory::factory()->create([
+            'product_variant_id' => $variant->id,
+            'quantity' => 10,
+            'reserved' => 0,
+        ]);
+
+        $cart = $user->cart()->create();
+
+        $item = CartItem::create([
+            'cart_id' => $cart->id,
+            'product_variant_id' => $variant->id,
+            'quantity' => 2,
+        ]);
+
+        $service = app(\App\Services\CartService::class);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage(
+            'Cart quantity must be greater than zero.'
+        );
+
+        $service->updateQuantity($item, 0);
+    }
+
+    public function test_cart_item_quantity_cannot_be_negative(): void
+    {
+        $user = User::factory()->create();
+
+        $product = Product::factory()->create();
+
+        $variant = ProductVariant::factory()->create([
+            'product_id' => $product->id,
+            'price' => 15000,
+        ]);
+
+        Inventory::factory()->create([
+            'product_variant_id' => $variant->id,
+            'quantity' => 10,
+            'reserved' => 0,
+        ]);
+
+        $cart = $user->cart()->create();
+
+        $item = CartItem::create([
+            'cart_id' => $cart->id,
+            'product_variant_id' => $variant->id,
+            'quantity' => 2,
+        ]);
+
+        $service = app(\App\Services\CartService::class);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage(
+            'Cart quantity must be greater than zero.'
+        );
+
+        $service->updateQuantity($item, -1);
+    }
+
+    public function test_cart_item_quantity_cannot_exceed_available_stock(): void
+    {
+        $user = User::factory()->create();
+
+        $product = Product::factory()->create();
+
+        $variant = ProductVariant::factory()->create([
+            'product_id' => $product->id,
+            'price' => 15000,
+        ]);
+
+        Inventory::factory()->create([
+            'product_variant_id' => $variant->id,
+            'quantity' => 5,
+            'reserved' => 0,
+        ]);
+
+        $cart = $user->cart()->create();
+
+        $item = CartItem::create([
+            'cart_id' => $cart->id,
+            'product_variant_id' => $variant->id,
+            'quantity' => 2,
+        ]);
+
+        $service = app(\App\Services\CartService::class);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage(
+            'Insufficient available inventory.'
+        );
+
+        $service->updateQuantity($item, 6);
+
+        $this->assertDatabaseHas('cart_items', [
+            'id' => $item->id,
+            'quantity' => 2,
+        ]);
+    }
+
+    public function test_cart_item_quantity_can_be_updated_to_available_stock(): void
+    {
+        $user = User::factory()->create();
+
+        $product = Product::factory()->create();
+
+        $variant = ProductVariant::factory()->create([
+            'product_id' => $product->id,
+            'price' => 15000,
+        ]);
+
+        Inventory::factory()->create([
+            'product_variant_id' => $variant->id,
+            'quantity' => 5,
+            'reserved' => 0,
+        ]);
+
+        $cart = $user->cart()->create();
+
+        $item = CartItem::create([
+            'cart_id' => $cart->id,
+            'product_variant_id' => $variant->id,
+            'quantity' => 2,
+        ]);
+
+        $service = app(\App\Services\CartService::class);
+
+        $updatedItem = $service->updateQuantity($item, 5);
+
+        $this->assertSame(5, $updatedItem->quantity);
+
+        $this->assertDatabaseHas('cart_items', [
+            'id' => $item->id,
+            'quantity' => 5,
+        ]);
     }
 }
