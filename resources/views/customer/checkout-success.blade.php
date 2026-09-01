@@ -9,7 +9,7 @@
     <main>
         <h1>Order created</h1>
         <p>Order number: {{ $order->order_number }}</p>
-        <p>Status: {{ $order->status }}</p>
+        <p>Status: {{ $order->status->label() }}</p>
 
         <h2>Purchased Items</h2>
         @foreach ($order->items as $item)

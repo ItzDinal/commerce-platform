@@ -7,8 +7,11 @@ use App\Http\Controllers\Customer\DashboardController;
 use App\Http\Controllers\Customer\WishlistController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Customer\CartController;
+use App\Http\Controllers\Customer\CheckoutController;
+use App\Http\Controllers\Customer\OrderController;
 
-Route::view('/', 'welcome')->name('home');
+Route::view('/', 'home')->name('home');
+Route::view('/about', 'about')->name('about');
 
 Route::get('/auth/google', [GoogleController::class, 'redirect'])
     ->name('google.redirect');
@@ -78,4 +81,28 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/account/cart', [CartController::class, 'store'])
         ->name('customer.cart.store');
+
+    Route::delete('/account/cart/{item}', [CartController::class, 'destroy'])
+        ->name('customer.cart.destroy');
+
+    // Customer Checkout
+    Route::get('/account/checkout', [CheckoutController::class, 'index'])
+        ->name('customer.checkout.index');
+
+    Route::post('/account/checkout', [CheckoutController::class, 'store'])
+        ->name('customer.checkout.store');
+
+    Route::get('/account/checkout/success/{order}', [CheckoutController::class, 'success'])
+        ->name('customer.checkout.success');
+
+    // Customer Dashboard
+    Route::get('/account', [DashboardController::class, 'index'])
+        ->name('customer.dashboard');
+
+    // Customer Orders
+    Route::get('/account/orders', [OrderController::class, 'index'])
+        ->name('customer.orders.index');
+    Route::get('/account/orders/{order}', [OrderController::class, 'show'])
+        ->name('customer.orders.show');
+        
 });

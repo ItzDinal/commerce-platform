@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -38,11 +39,17 @@ class OrderTest extends TestCase
 
     public function test_order_status_is_stored(): void
     {
-        $order = Order::factory()->create([
-            'status' => 'pending',
-        ]);
+        $order = Order::factory()->create();
 
-        $this->assertSame('pending', $order->status);
+        $this->assertSame(OrderStatus::PENDING, $order->status);
+        $this->assertSame('pending', $order->getRawOriginal('status'));
+    }
+
+    public function test_order_factory_defaults_to_pending_status(): void
+    {
+        $order = Order::factory()->make();
+
+        $this->assertSame(OrderStatus::PENDING, $order->status);
     }
 
     public function test_user_can_have_multiple_orders(): void

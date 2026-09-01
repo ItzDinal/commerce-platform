@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -21,7 +22,7 @@ class OrderFactory extends Factory
             'shipping_address_id' => null,
             'billing_address_id' => null,
             'shipping_method' => 'standard',
-            'status' => 'pending',
+            'status' => OrderStatus::PENDING,
             'subtotal' => 0,
             'shipping_fee' => 0,
             'total' => 0,

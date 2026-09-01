@@ -28,7 +28,7 @@
                         <strong>Order {{ $order->id }}</strong>
 
                         <span>
-                            Status: {{ $order->status }}
+                            Status: {{ $order->status->label() }}
                         </span>
 
                         <span>

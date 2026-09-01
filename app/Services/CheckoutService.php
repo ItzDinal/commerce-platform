@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\OrderStatus;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\ProductVariant;
@@ -141,7 +142,7 @@ class CheckoutService
                 'shipping_address_id' => $shippingAddressId,
                 'billing_address_id' => $billingAddressId,
                 'shipping_method' => $shippingMethod,
-                'status' => 'pending',
+                'status' => OrderStatus::PENDING,
                 'subtotal' => $subtotal,
                 'shipping_fee' => $shippingFee,
                 'total' => $subtotal + $shippingFee,

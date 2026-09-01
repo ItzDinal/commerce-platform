@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Customer;
 
+use App\Enums\OrderStatus;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -51,7 +52,7 @@ class DashboardTest extends TestCase
 
         foreach ($orders as $order) {
             $response->assertSee($order->id);
-            $response->assertSee($order->status);
+            $response->assertSee(OrderStatus::PENDING->label());
         }
     }
 

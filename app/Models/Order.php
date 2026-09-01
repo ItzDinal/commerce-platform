@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\OrderStatus;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -25,6 +26,7 @@ class Order extends BaseModel
     protected function casts(): array
     {
         return [
+            'status' => OrderStatus::class,
             'subtotal' => 'integer',
             'shipping_fee' => 'integer',
             'total' => 'integer',
